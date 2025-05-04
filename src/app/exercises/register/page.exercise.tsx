@@ -1,7 +1,5 @@
-// 🐶 Importe les 2 composants ci-dessous ils seronts utiles pour le formulaire de `login`
-// 🤖
-// import {Input} from '@/components/ui/input'
-// import {Button} from '@/components/ui/button'
+import {Input} from '@/components/ui/input'
+import {Button} from '@/components/ui/button'
 
 export default function Page() {
   return (
@@ -17,7 +15,7 @@ function RegisterForm() {
     <div>
       <h1 className="mb-4 text-center text-3xl font-bold">Register</h1>
       <form>
-        {/* <Input
+        <Input
           type="email"
           name="email"
           placeholder="Email"
@@ -39,13 +37,14 @@ function RegisterForm() {
           required
           className="mb-4"
           placeholder="Confirm Password"
-        /> */}
-
-        <LoginButton />
+        />
+        <div className="flex justify-end">
+          <LoginButton />
+        </div>
       </form>
     </div>
   )
 }
 function LoginButton() {
-  return <></>
+  return <Button type="submit">Register</Button>
 }
