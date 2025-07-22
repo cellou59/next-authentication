@@ -59,6 +59,13 @@
       "password": "$2b$10$AH61UXSvLf6Tyg4Ru4Y04eiInNQSH4.Umwp5.gAGAyewQwkMaozci",
       "name": "John Doe",
       "role": "SUPER_ADMIN"
+    },
+    {
+      "id": "3",
+      "email": "cellou@retailshake.com",
+      "password": "$2b$10$So4gxbbGOrGIv4Z20YQqwuY1tnGLZDYcMGSqO8Jd5d36E.flzOB3e",
+      "name": "Not used",
+      "role": "USER"
     }
   ],
   "sessions": [
