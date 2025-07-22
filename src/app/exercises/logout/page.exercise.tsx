@@ -1,4 +1,5 @@
 import Logout from '@/app/exercises/auth/form/logout-form'
+import withAuth from '../auth/lib/withAuth'
 
 function Page() {
   return (
@@ -8,4 +9,4 @@ function Page() {
   )
 }
 
-export default Page
+export default withAuth(Page)
