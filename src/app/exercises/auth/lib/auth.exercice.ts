@@ -2,6 +2,7 @@ import {RoleEnum} from '@/lib/type'
 import bcrypt from 'bcrypt'
 import {addUser, getUserByEmail} from '@/db/sgbd'
 import {SignInError} from './type'
+import {createSession, deleteSession} from './session-stateless'
 
 const signUp = async (email: string, password: string) => {
   await new Promise((resolve) => setTimeout(resolve, 1000))
@@ -48,12 +49,14 @@ const signIn = async (email: string, password: string) => {
       message: 'Invalid credentials.',
     } as SignInError
   }
+  await createSession(user.id)
 
   return {email: user.email, role: user.role}
 }
 
 async function logout() {
   await new Promise((resolve) => setTimeout(resolve, 1000))
+  await deleteSession()
   return {message: 'Logout successful'}
 }
 
