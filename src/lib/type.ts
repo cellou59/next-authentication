@@ -38,6 +38,7 @@ export type User = {
 }
 export type AddUser = Partial<Pick<User, 'id'>> & Omit<User, 'id'>
 export type AddTodo = Partial<Pick<Todo, 'id'>> & Omit<Todo, 'id'>
+export type UserDTO = Pick<User, 'email' | 'name' | 'role'>
 export enum CategoriesEnum {
   default = 'default',
   lighting = 'lighting',
