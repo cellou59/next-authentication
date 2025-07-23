@@ -5,7 +5,7 @@ import {logout} from '../actions'
 // 🐶 Importe le hook `useRouter`
 //  et non -> {redirect} from 'next/navigation' car nous sommes en RCC
 
-// 🤖 import {useRouter} from 'next/navigation'
+import {useRouter} from 'next/navigation'
 
 // 🐶 Modifie le composant `<LogoutButton>` pour faire la redirection
 export default function Logout() {
@@ -17,16 +17,15 @@ export default function Logout() {
   )
 }
 function LogoutButton() {
+  const router = useRouter()
   const [pending, setPending] = useState(false)
-  // 🐶 Utilise `useRouter`
   // 📑 https://nextjs.org/docs/app/api-reference/functions/use-router
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
     setPending(true)
     await logout()
     setPending(false)
-    // 🐶 Fais une redirection vers `/exercises/`
+    router.push(`/exercises/`)
   }
 
   return (

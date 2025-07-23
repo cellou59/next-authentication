@@ -56,7 +56,7 @@ const signIn = async (email: string, password: string) => {
 
 async function logout() {
   await new Promise((resolve) => setTimeout(resolve, 1000))
-  deleteSession()
+  await deleteSession()
   return {message: 'Logout successful'}
 }
 
