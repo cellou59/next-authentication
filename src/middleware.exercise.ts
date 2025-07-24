@@ -1,6 +1,9 @@
 import {cookies} from 'next/headers'
 import {NextResponse, type NextRequest} from 'next/server'
 import {decrypt} from './app/exercises/auth/lib/crypt'
+import {RoleEnum} from './lib/type'
+import {getUserById} from './db/sgbd'
+import {error} from 'console'
 
 const protectedRoutes = new Set([
   '/exercises/dashboard',
@@ -8,22 +11,17 @@ const protectedRoutes = new Set([
 ])
 const publicRoutes = new Set(['/'])
 
-// 🐶 Spécifie les routes 'admin'
-// 'isAdminRoute' est un Set qui contient les routes admin
-
-// 🐶 Spécifie les routes 'redactor'
-// 'isRedactorRoute' est un Set qui contient les routes redactor
+const adminRoute = new Set(['/admin'])
+const redactorRoute = new Set(['/redaction'])
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
   const isProtectedRoute = protectedRoutes.has(path)
   const isPublicRoute = publicRoutes.has(path)
 
-  // 🐶 Vérifie si la route est une route admin
-  // 🤖 isAdminRoute
+  const isAdminRoute = adminRoute.has(path)
+  const isRedactorRoute = redactorRoute.has(path)
 
-  // 🐶 Vérifie si la route est une route redactor
-  // 🤖 isRedactorRoute
   const cookieStore = await cookies()
   const cookie = cookieStore.get('session')?.value
   const session = await decrypt(cookie)
@@ -34,11 +32,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/exercises/login', request.nextUrl))
   }
 
-  // 🐶 Redirige l'utilisateur si la route est une route admin
-  // Redirige vers '/restricted/' si l'utilisateur n'est pas admin
+  if (isAdminRoute && session?.role !== RoleEnum.ADMIN) {
+    return NextResponse.redirect(new URL('/restricted/', request.nextUrl))
+  }
 
-  // 🐶 Redirige l'utilisateur si la route est une route redactor
-  // Redirige vers '/restricted/' si l'utilisateur n'est pas redactor ou admin
+  if (isRedactorRoute && session?.role !== RoleEnum.REDACTOR) {
+    return NextResponse.redirect(new URL('/restricted/', request.nextUrl))
+  }
 
   if (isPublicRoute && hasSession) {
     return NextResponse.redirect(new URL('/exercises/auth', request.nextUrl))

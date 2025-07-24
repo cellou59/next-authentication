@@ -51,7 +51,7 @@
       "email": "a@a.fr",
       "password": "$2b$10$ctVHPcQ6RdTSIYnxUVbj6uzjbe9P1Cmku.vcon9uLj4I/xYpXGwvO",
       "name": "John",
-      "role": "USER"
+      "role": "REDACTOR"
     },
     {
       "id": "2",
