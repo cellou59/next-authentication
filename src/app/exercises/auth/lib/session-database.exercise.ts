@@ -1,84 +1,117 @@
-//⛏️ Supprime ces imports, tu n'en as pas besoin
+import {cookies, headers} from 'next/headers'
+import {randomUUID} from 'node:crypto'
+
 import {
-  createSession as createSessionStateLess,
-  deleteSession as deleteSessionStateLess,
-  verifySession as verifySessionStateless,
-} from './session-stateless'
+  addSession as addSessionDao,
+  findSession as findSessionDao,
+  deleteSession as deleteSessionDao,
+  updateSession as updateSessionDao,
+  findSessionByUidUserAgent,
+} from '@/db/sgbd'
 
-// 🐶 Importe `cookies`
-// import {cookies} from 'next/headers'
-
-// 🐶 Importe `randomUUID` il va te permettre de générer des `sessionId`
-// import {randomUUID} from 'node:crypto'
-
-// 🐶 Importe les fonctions de persistance de session
-// import {
-//   addSession as addSessionDao,
-//   findSession as findSessionDao,
-//   deleteSession as deleteSessionDao,
-// } from '@/db/sgbd'
-
-// 🐶 Importe ce dont tu as besoin pour créer les sessions
-//import {decrypt, encrypt, EXPIRE_TIME, isExpired} from './crypt'
+import {decrypt, encrypt, EXPIRE_TIME, isExpired} from './crypt'
 
 export async function createSession(uid: string) {
-  //⛏️ Supprime cette ligne
-  return await createSessionStateLess(uid)
+  const expiresAt = new Date(Date.now() + EXPIRE_TIME)
+  const cookieStore = await cookies()
+  const headersList = await headers()
+  const userAgent = headersList.get('User-Agent')
+  const sessionByUid = await findSessionByUidUserAgent(uid, userAgent ?? '')
 
-  // 🐶 1. Création de la session
+  if (sessionByUid && !isExpired(sessionByUid?.expiresAt)) {
+    await updateSessionDao({
+      ...sessionByUid,
+      expiresAt: expiresAt.toISOString(),
+    })
+    const session = await encrypt({
+      sessionId: sessionByUid.sessionId,
+      expiresAt,
+    })
+    cookieStore.set('session', session, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      expires: expiresAt,
+      sameSite: 'lax',
+      path: '/',
+    })
+    return
+  }
 
-  //  🐶 Crée `expiresAt`, une date d'expiration (similaire à session-stateless)
-  //  🐶 Crée un `sessionId` avec `randomUUID`
+  const sessionId = randomUUID()
+  await addSessionDao({
+    sessionId,
+    userId: uid,
+    expiresAt: expiresAt.toISOString(),
+    userAgent,
+  })
 
-  //  🐶 Ajoute la session dans la base de données
-  //  🤖
-  // await addSessionDao({
-  //   sessionId,
-  //   userId: uid,
-  //   expiresAt: expiresAt.toISOString(),
-  // })
-
-  // 🐶 2. Encrypte la session ({sessionId, expiresAt})
-  // const session = await encrypt({sessionId, expiresAt})
-
-  // 🐶 3. Stocke la session dans les cookies
-  // 🤖  const cookieStore = await cookies()
-  // cookieStore.set('session', session ...
+  const session = await encrypt({sessionId, expiresAt})
+  cookieStore.set('session', session, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    expires: expiresAt,
+    sameSite: 'lax',
+    path: '/',
+  })
 }
 
 export async function verifySession() {
-  //⛏️ Supprime cette ligne
-  return await verifySessionStateless()
+  const cookieStore = await cookies()
+  const cookie = cookieStore.get('session')?.value
+  const session = await decrypt(cookie)
 
-  // 🐶 Récupère le cookie de la session
-  // 🤖 const cookie = cookies().get('session')?.value
+  if (!session || !session.sessionId) {
+    console.log('verifySession No session found')
+    return
+  }
+  const sessionDao = await findSessionDao(session.sessionId)
+  if (sessionDao && !isExpired(sessionDao?.expiresAt)) {
+    return {
+      isAuth: true,
+      userId: sessionDao.userId,
+      sessionId: session.sessionId,
+    }
+  }
 
-  // 🐶 Décrypte la session (similaire à session-stateless)
-
-  // 🐶 Si la session n'est pas valide (session où sessionId non défini), on s'arrêtte la `return`
-
-  // 🐶 Récupération de la session en base de données avec `findSessionDao`
-  // 🐶 Si la session existe et n'est pas expirée (isExpired), on retourne les informations de l'utilisateur
-  // return {
-  //   isAuth: true,
-  //   userId: sessionDao.userId,
-  //   sessionId: session.sessionId,
-  // }
-  // 🐶 Sinon on retourne {isAuth: false}
+  return {isAuth: false}
 }
 
-export function deleteSession() {
-  //⛏️ Supprime cette ligne
-  return deleteSessionStateLess()
-
-  // 🐶 Récupère le cookie de la session
-  // 🤖 const cookie = cookies().get('session')?.value
-
-  // 🐶 Décrypte la session (similaire à session-stateless)
-  // 🐶 Si la session est valide, on supprime la session de la base de données
-
-  // 🐶 Supression du cookie : cookies().delete
+export async function deleteSession() {
+  const cookieStore = await cookies()
+  const cookie = cookieStore.get('session')?.value
+  const session = await decrypt(cookie)
+  if (session) {
+    await deleteSessionDao(session.sessionId ?? '')
+  }
+  await cookieStore.delete('session')
 }
 
 //1. 🚀 Update Session
-export function updateSession() {}
+export async function updateSession() {
+  const cookieStore = await cookies()
+  const cookie = cookieStore.get('session')?.value
+  const session = await decrypt(cookie)
+
+  if (!session || !session.sessionId) {
+    console.log('verifySession No session found')
+    return
+  }
+
+  const sessionDao = await findSessionDao(session.sessionId)
+  if (sessionDao && !isExpired(sessionDao?.expiresAt)) {
+    const expires = new Date(Date.now() + EXPIRE_TIME)
+
+    // await updateSessionDao({
+    //   ...sessionDao,
+    //   expiresAt: expires.toISOString(),
+    // })
+
+    // cookieStore.set('session', session.sessionId, {
+    //   httpOnly: true,
+    //   secure: true,
+    //   expires,
+    //   sameSite: 'lax',
+    //   path: '/',
+    // })
+  }
+}

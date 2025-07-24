@@ -63,9 +63,16 @@
   ],
   "sessions": [
     {
-      "sessionId": "1",
+      "sessionId": "ba9a1427-adbe-47c0-ac4a-6910210268f6",
       "userId": "1",
-      "expiresAt": "2024-07-12T09:46:07.059Z"
+      "expiresAt": "2025-07-23T06:55:52.656Z",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+    },
+    {
+      "sessionId": "4cbb68ce-7d86-4d74-aea1-dfc456fe22d9",
+      "userId": "1",
+      "expiresAt": "2025-07-23T07:11:30.173Z",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
     }
   ]
 }
