@@ -9,7 +9,7 @@ export const getConnectedUser = cache(async () => {
   const session = await verifySession()
   if (!session || !session?.isAuth) return
   updateSession()
-  console.log('getConnectedUser', session)
+
   try {
     const user = await getUserById(session.userId as string)
     return userDTO(user as User)

@@ -22,7 +22,6 @@ export async function verifySession() {
   const cookieStore = await cookies()
   const cookie = cookieStore.get('session')?.value
   const session = await decrypt(cookie)
-  console.log('verifySession cookie', cookie, session)
 
   if (!session || !session.userId) {
     console.log('verifySession No session found')

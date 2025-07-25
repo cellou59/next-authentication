@@ -35,7 +35,7 @@ export async function changeConnectedUserRole(
   _currentState: FormState,
   formData: FormData
 ): Promise<FormState> {
-  await new Promise((resolve) => setTimeout(resolve, 1000))
+  await new Promise((resolve) => setTimeout(resolve, 500))
   const requestedRole = formData.get('role') as RoleEnum
   const parsedFields = ChangeRoleSchema.safeParse({
     role: requestedRole,
@@ -53,35 +53,20 @@ export async function changeConnectedUserRole(
   if (!userConnected) {
     return {message: 'vous etes pas connecté'}
   }
-  // 🐶 Empêche l'appel à `updateUserRole` si le `role` demandé est supérieur au `role` de l'utilisateur connecté
-  // Pour cela on va se baser sur l'ordre des rôles
-  // const roleHierarchy = [
-  //   RoleEnum.USER,
-  //   RoleEnum.REDACTOR,
-  //   RoleEnum.MODERATOR,
-  //   RoleEnum.ADMIN,
-  //   RoleEnum.SUPER_ADMIN,
-  // ]
+  const isRoleValid = await checkRoleHierarchy(userConnected, requestedRole)
+  if (!isRoleValid) {
+    console.log('🚀 ~ not RoleValid:')
 
-  // 🐶 Détermine le niveau de l'utilisateur
-  const userRoleIndex = 1
-  // 🐶 Détermine le niveau demandé
-  const requestedRoleIndex = 1
-
-  // 🐶 Si le `role` demandé est supérieur au `role` de l'utilisateur connecté, on retourne une erreur
-
-  // return {
-  //   errors: {
-  //     role: [
-  //       'Vous ne pouvez pas vous attribuer un rôle avec plus de privilèges',
-  //     ],
-  //   },
-  //   message:
-  //     'Vous ne pouvez pas vous attribuer un rôle avec plus de privilèges',
-  // }
-
-  // 🐶 Note : Tu peux déplacer ce code dans une fonction `checkRoleHierarchy`
-
+    return {
+      errors: {
+        role: [
+          'Vous ne pouvez pas vous attribuer un rôle avec plus de privilèges',
+        ],
+      },
+      message:
+        'Vous ne pouvez pas vous attribuer un rôle avec plus de privilèges',
+    }
+  }
   try {
     await updateUserRole(userConnected.email, requestedRole)
   } catch (error) {
@@ -91,6 +76,38 @@ export async function changeConnectedUserRole(
 
   revalidatePath('/exercises/auth')
   return {message: 'change role successful'}
+}
+export async function checkRoleHierarchy(
+  userConnected: UserDTO,
+  requestedRole: RoleEnum
+) {
+  console.log('🚀 ~ userConnected:', userConnected)
+
+  const roleHierarchy = [
+    RoleEnum.USER,
+    RoleEnum.REDACTOR,
+    RoleEnum.MODERATOR,
+    RoleEnum.ADMIN,
+    RoleEnum.SUPER_ADMIN,
+  ]
+
+  if (!userConnected?.role) {
+    return
+  }
+
+  // 🐶 Détermine le niveau de l'utilisateur
+  const userRoleIndex = roleHierarchy.indexOf(userConnected?.role) || 0
+  console.log('🚀 ~ userRoleIndex:', userRoleIndex)
+  // 🐶 Détermine le niveau demandé
+  const requestedRoleIndex = roleHierarchy.indexOf(requestedRole) || 0
+  console.log('🚀 ~ requestedRoleIndex:', requestedRoleIndex)
+
+  console.log(
+    '🚀 ~ (requestedRoleIndex > userRoleIndex):',
+    requestedRoleIndex > userRoleIndex
+  )
+  if (requestedRoleIndex > userRoleIndex) return false
+  return true
 }
 
 // 🐶 Adapte cette fonction pour empêcher un utilisateur non admin de changer le role des autres users
@@ -119,14 +136,15 @@ export async function changeUserRole(
   }
 
   // 🐶 Vérifie que le role du `userConnected` est OK
-
-  // SINON on retourne une erreur
-  // return {
-  //   errors: {
-  //     role: ['Seuls les ADMIN et SUPER_ADMIN peuvent changer les rôles'],
-  //   },
-  //   message: 'Seuls les ADMIN et SUPER_ADMIN peuvent changer les rôles',
-  // }
+  const isRoleValid = await checkRoleHierarchy(userConnected, requestedRole)
+  if (!isRoleValid) {
+    return {
+      errors: {
+        role: ['Seuls les ADMIN et SUPER_ADMIN peuvent changer les rôles'],
+      },
+      message: 'Seuls les ADMIN et SUPER_ADMIN peuvent changer les rôles',
+    }
+  }
 
   const user = await getUserByEmail(requestedEmail)
   if (!user) {

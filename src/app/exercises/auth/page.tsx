@@ -5,7 +5,6 @@ import ChangeRoleForm from './form/change-role-form'
 import AdminChangeRoleForm from './form/admin-role-form'
 
 async function Page({user}: WithAuthProps) {
-  console.log('Page : user', user)
   return (
     <div className="mx-auto max-w-2xl space-y-8 p-6 text-center text-lg">
       <h1 className="mb-4 mt-4   text-center text-3xl font-bold">
