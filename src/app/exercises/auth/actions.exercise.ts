@@ -2,8 +2,7 @@
 'use server'
 // 🐶 Adapte la fonction `authenticate`
 
-// 🐶 Importe {signIn, signOut} de `NextAuth`
-// 🤖 import {signIn, signOut} from '@/auth'
+import {signIn, signOut} from '@/auth'
 import {RoleEnum} from '@/lib/type'
 // eslint-disable-next-line no-restricted-imports
 import {auth} from '@/app/exercises/auth/lib/auth'
@@ -53,9 +52,7 @@ export async function authenticate(
     }
   }
   try {
-    // ⛏️ Supprime l'appel à `auth.signIn` notre auth custom
-    const user = await auth.signIn(email, password)
-    // 🐶 Remplace par `signIn` de `nextAuth`
+    const user = await signIn('credentials', {email, password})
     console.log('Signed in:', user)
   } catch (error) {
     console.error('authenticate error:', error)
@@ -66,11 +63,9 @@ export async function authenticate(
     }
     const signInError = error as SignInError
     // 🐶 Catch les error de `nextAuth` (lève dans auth.ts)
-
-    // 🤖
-    // if (error instanceof AuthError) {
-    //   return {message: `Authentication error.${error.cause?.err}`}
-    // }
+    if (error instanceof AuthError) {
+      return {message: `Authentication error.${error.cause?.err}`}
+    }
     if (error) {
       switch (signInError.type) {
         case 'CredentialsSignin': {
@@ -109,14 +104,10 @@ export async function register(
     }
   }
   try {
-    //BONUS 1
-    // 🐶 `NextAuth` n'a pas de `SignUp` on gardre notre implémentation
     const user = await auth.signUp(email, password)
     console.log('Signed UP:', user)
 
-    // 🐶 Il faut ensuite gérer un `signIn` ici pour créer la session `JWT`
-    //
-    // 🤖 await signIn('credentials', formData)
+    await signIn('credentials', formData)
   } catch (error) {
     //https://github.com/nextauthjs/next-auth/discussions/9389#discussioncomment-8046451
     if (isRedirectError(error)) {
@@ -139,7 +130,7 @@ export async function register(
 }
 
 export async function logout() {
-  await auth.logout()
+  await signOut()
 }
 
 export async function changeConnectedUserRole(
